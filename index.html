@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sum Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>SUM CALCULATOR</h1>
+
+    <form id="calculatorForm">
+        <label for="num1">Number 1:</label>
+        <input type="number" id="num1" required>
+
+        <label for="num2">Number 2:</label>
+        <input type="number" id="num2" required>
+
+        <button type="submit" id="calculateBtn">
+            <span id="btnText">CALCULATE</span>
+            <span id="loadingSpinner" class="spinner d-none"></span> 
+        </button>
+    </form>
+
+    <div id="errorAlert" class="alert d-none">
+        <strong style="color: red;">Error!</strong> <span id="errorMessage"></span>
+    </div>
+
+    <div id="resultSection" class="result-box d-none">
+        <h2>Calculation Result:</h2>
+        <p><strong>Transaction ID:</strong> <span id="resultId"></span></p>
+        <p><strong>Timestamp:</strong> <span id="resultTimestamp"></span></p>
+        <p><strong>Numbers:</strong> <span id="resultNum1"></span> + <span id="resultNum2"></span></p>
+        <p><strong>Sum:</strong> <span id="resultSum"></span></p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
