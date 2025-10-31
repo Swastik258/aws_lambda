@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Define the API endpoint. REPLACE THIS WITH YOUR ACTUAL API GATEWAY INVOKE URL!
-    const API_ENDPOINT = 'https://lrkgg62l93.execute-api.ap-south-1.amazonaws.com/Prod/calculator'; // Example: https://5nur6rhsjb.execute-api.us-east-1.amazonaws.com/dev
+    // 🔗 Your API Gateway endpoint
+    const API_ENDPOINT = 'https://lrkgg62l93.execute-api.ap-south-1.amazonaws.com/Prod/calculator';
 
-    // Get references to our HTML elements so we can interact with them.
+    // 🌐 Get references to form and elements
     const calculatorForm = document.getElementById('calculatorForm');
     const num1Input = document.getElementById('num1');
     const num2Input = document.getElementById('num2');
@@ -13,132 +13,123 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorMessage = document.getElementById('errorMessage');
     const resultSection = document.getElementById('resultSection');
 
-    // References to the elements where we'll display the results.
+    // Result elements
     const resultId = document.getElementById('resultId');
     const resultTimestamp = document.getElementById('resultTimestamp');
     const resultNum1 = document.getElementById('resultNum1');
     const resultNum2 = document.getElementById('resultNum2');
     const resultSum = document.getElementById('resultSum');
 
-    // Listen for when the calculator form is submitted (i.e., when the "CALCULATE" button is clicked).
+    // 🎯 Form submit event listener
     calculatorForm.addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent the default form submission behavior (which would refresh the page).
+        event.preventDefault(); // Prevent page reload
 
-        // Hide any previous error messages or results before a new calculation.
-        errorAlert.classList.add('d-none'); // 'd-none' is a class (from our CSS) to hide elements.
+        // Reset UI states
+        errorAlert.classList.add('d-none');
         resultSection.classList.add('d-none');
 
-        // Get the values entered by the user in the input fields and convert them to numbers.
+        // 🧮 Get input values
         const num1 = parseFloat(num1Input.value);
         const num2 = parseFloat(num2Input.value);
 
-        // Basic input validation: Check if the values are actually numbers.
         if (isNaN(num1) || isNaN(num2)) {
-            showError('Please enter valid numbers'); // Display an error if inputs are not numbers.
-            return; // Stop the function here.
+            showError('Please enter valid numbers');
+            return;
         }
 
-        // Show a loading state on the button to indicate that a calculation is in progress.
+        // ⏳ Show loading spinner
         setLoadingState(true);
 
-        // Prepare the data to be sent to our API Gateway in JSON format.
-        const requestData = {
-            num1: num1,
-            num2: num2
-        };
+        const requestData = { num1: num1, num2: num2 };
 
-        // Use the Fetch API to send a POST request to our API Gateway endpoint.
+        // 🚀 Send POST request to Lambda via API Gateway
         fetch(API_ENDPOINT, {
-            method: 'POST', // We are sending data, so it's a POST request.
-            headers: {
-                'Content-Type': 'application/json' // Tell the API we're sending JSON data.
-            },
-            body: JSON.stringify(requestData) // Convert our JavaScript object to a JSON string.
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData)
         })
-        .then(response => {
-            // Check if the network response was OK (status code 200-299).
-            if (!response.ok) {
-                // If not OK, try to parse the error message from the response body.
-                return response.json().then(errData => {
-                    throw new Error(errData.message || 'Server error');
-                });
+        .then(async response => {
+            let data;
+            try {
+                data = await response.json();
+            } catch (err) {
+                throw new Error('Invalid JSON response from API');
             }
-            // If OK, parse the successful response body as JSON.
-            return response.json();
+
+            if (!response.ok) {
+                const errMsg = data.message || 'Server error';
+                throw new Error(errMsg);
+            }
+
+            return data;
         })
         .then(data => {
-            // Once we get a response, hide the loading state.
             setLoadingState(false);
 
-            // Process the response from our Lambda function.
-            // Our Lambda function wraps the actual result in a 'body' string, so we need to parse it again.
-            if (data.statusCode && data.statusCode === 200 && data.body) {
+            // 🧩 Handle both Lambda proxy and direct JSON
+            let resultData;
+            if (data.body) {
                 try {
-                    // Try to parse the nested 'body' string into a JavaScript object.
-                    const resultData = typeof data.body === 'string' 
-                        ? JSON.parse(data.body) 
-                        : data.body;
-
-                    // Display the calculation result on the page.
-                    displayResult(resultData);
+                    resultData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
                 } catch (err) {
-                    showError('Error parsing the result: ' + err.message);
+                    showError('Error parsing API response: ' + err.message);
+                    return;
                 }
             } else {
-                showError('Unexpected API response format'); // If the response isn't what we expect.
+                resultData = data;
+            }
+
+            if (resultData && resultData.result) {
+                displayResult(resultData);
+            } else {
+                showError('Unexpected API response format');
             }
         })
         .catch(error => {
-            // Catch any errors that occurred during the fetch operation (e.g., network issues, API errors).
-            setLoadingState(false); // Hide loading state even on error.
+            setLoadingState(false);
             showError(error.message || 'An error occurred while communicating with the API');
         });
     });
 
-    // Helper function to display an error message.
+    // ⚙️ Error display function
     function showError(message) {
-        errorMessage.textContent = message; // Set the error message text.
-        errorAlert.classList.remove('d-none'); // Show the error alert.
+        errorMessage.textContent = message;
+        errorAlert.classList.remove('d-none');
     }
 
-    // Helper function to manage the button's loading state.
+    // ⚙️ Loading state management
     function setLoadingState(isLoading) {
         if (isLoading) {
-            btnText.textContent = 'Calculating...'; // Change button text.
-            loadingSpinner.classList.remove('d-none'); // Show spinner.
-            calculateBtn.disabled = true; // Disable button to prevent multiple clicks.
+            btnText.textContent = 'Calculating...';
+            loadingSpinner.classList.remove('d-none');
+            calculateBtn.disabled = true;
         } else {
-            btnText.textContent = 'CALCULATE'; // Reset button text.
-            loadingSpinner.classList.add('d-none'); // Hide spinner.
-            calculateBtn.disabled = false; // Enable button.
+            btnText.textContent = 'CALCULATE';
+            loadingSpinner.classList.add('d-none');
+            calculateBtn.disabled = false;
         }
     }
 
-    // Helper function to display the successful calculation result.
+    // 🧾 Display successful result
     function displayResult(data) {
-        // Ensure we have the 'result' object from the API response.
-        if (!data.result) {
+        const result = data.result;
+        if (!result) {
             showError('No result data in the API response');
             return;
         }
 
-        const result = data.result;
-
-        // Format the timestamp into a human-readable date and time.
         let timestampDisplay = result.Timestamp;
         if (result.Timestamp && !isNaN(result.Timestamp)) {
-            const date = new Date(parseInt(result.Timestamp) * 1000); // Convert milliseconds to Date object.
-            timestampDisplay = date.toLocaleString(); // Format to local date/time string.
+            const date = new Date(parseInt(result.Timestamp) * 1000);
+            timestampDisplay = date.toLocaleString();
         }
 
-        // Update the text content of our result display elements.
         resultId.textContent = result.ID || 'N/A';
         resultTimestamp.textContent = timestampDisplay || 'N/A';
         resultNum1.textContent = result.num1;
         resultNum2.textContent = result.num2;
         resultSum.textContent = result.sum;
 
-        // Show the result section.
         resultSection.classList.remove('d-none');
     }
 });
