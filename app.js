@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // 🔗 Your API Gateway endpoint
-    const API_ENDPOINT = 'https://ziw39zpyci.execute-api.ca-central-1.amazonaws.com/prod/myapi';
+    const API_ENDPOINT = 'https://lrkgg62l93.execute-api.ap-south-1.amazonaws.com/Prod/calculator';
 
     // 🌐 Get references to form and elements
     const calculatorForm = document.getElementById('calculatorForm');
